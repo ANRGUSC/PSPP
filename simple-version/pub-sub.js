@@ -6,6 +6,8 @@ var address2 = 'LMMKZDFYA999ZKEICKWHENCRYEKSNWUCYZZJJCSZKWGYUTLQ9QFKPJCNA9RSHUDV
 var client = mqtt.connect('mqtt://localhost', {
          clientId: address1,
          clean: false,
+         username:'weAreTheChampions',
+         password:'yesWeAre'
      })
 
 //Three messages, one publisher, one topic
@@ -27,7 +29,9 @@ client.on('connect', function(){
 
 var  subs = mqtt.connect('mqtt://localhost', {
          clientId: address2,
-         clean: false
+         clean: false,
+         username:'weAreTheChampions',
+         password:'yesWeAre'
      })
 
      subs.on('connect', function () {

@@ -12,6 +12,7 @@ var brokerFee = 0.1;
 var i=0
 var j=0
 
+
 //IOTA 
 const iotaLibrary = require('@iota/core')
 const Converter = require('@iota/converter');
@@ -22,6 +23,7 @@ const iota = iotaLibrary.composeAPI({
 
 const seed =
   'GZOAAHPHJWO9TMRFLWJSNANNNUIIXYVQERUCXMGIGGCYMFGPE9FMYSWBMNGJSAARCBZCGQSZWUNT9MEZV'
+
 
 server.listen(port, function () {
   console.log('server listening on port', port)
@@ -48,7 +50,16 @@ aedes.on('connectionError', function (client, err) {
 
 aedes.on('publish', function (packet, client) {
   if (client) {
+
+    //Catching username and password
+    var usrnme = Object.values(client['parser'])['0']['username']
+    var pass = Object.values(client['parser'])['0']['password']
+
     console.log('message from client', client.id)
+    console.log('username:',usrnme)
+  //var x = Buffer.compare(buf1, buf2)  
+    console.log('password:',pass)
+
     var  topic = packet.topic
     var price = getPrice(topic)
     var currency =  getCurrency(topic)
@@ -57,21 +68,35 @@ aedes.on('publish', function (packet, client) {
     if (IsItNew(packet.topic)){
     topics[i] = topic
     console.log(`${packet.topic} added`)
+    //topics[i][0]= usrnme
+    //topics[i][1]= pass
     i++
+    
+    var subs = listOfSubs(packet.topic)
+    var sub = subs[0]
     }
 
     //Charge from the subscriptors using IOTA
-    chargeSubs(listOfSubs(packet.topic), client, topic.toString(), price, currency)
+    //chargeSubs(listOfSubs(packet.topic), client, topic.toString(), price, currency)
 
     console.log(`The price is: ${price} and the currency is: ${currency}`)
-    console.log(`List of subscribers to ${packet.topic} topic`,listOfSubs(packet.topic))
+    console.log(`List of subscribers to ${packet.topic} topic`,subs)
 
   }
 })
 
+
 aedes.on('subscribe', function (subscriptions, client) {
   if (client) {
+    //Authorizations
+   aedes.authorizeSubscribe = function (client,sub, credentialsCheck) {
+    var usrnmeSub = Object.values(sub['parser'])['0']['username']
+    var usrnmePub = 'weAreTheChampions'
+ 
+    return (credentialsCheck(usrnmeSub,usrnmePub))
+    }
     console.log('Subscriptions of',client.id, subscriptions)
+
     }
 })
 
@@ -80,6 +105,7 @@ aedes.on('client', function (client) {
   //console.log("client", client)
   clientsId[j] = client.id
   j++
+
 })
 
 function listOfSubs(topic){
@@ -180,3 +206,10 @@ function chargeSubs(arrayOfSubs, pub, topic, price, currency){
   return status
 }
 
+function credentialsCheck(a,b){
+  var res = false
+  if (a===b){
+    res = true
+  }
+return res
+}
