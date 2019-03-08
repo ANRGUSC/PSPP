@@ -6,23 +6,21 @@ var httpServer = require('http').createServer()
 var ws = require('websocket-stream')
 var port = 1883
 var wsPort = 8888
-var topics = []
+var topics_count = []
 var clientsId = []
 var brokerFee = 0.1;
 var i=0
 var j=0
+var maxTrans = 10;
 
+//Required for transactions
+var express = require('express');
+var router = express.Router();
+const Web3 = require('web3');
+const keys = require('./config/keys');
 
-//IOTA 
-const iotaLibrary = require('@iota/core')
-const Converter = require('@iota/converter');
-
-const iota = iotaLibrary.composeAPI({
-  provider: 'https://nodes.devnet.thetangle.org:443'
-})
-
-const seed =
-  'GZOAAHPHJWO9TMRFLWJSNANNNUIIXYVQERUCXMGIGGCYMFGPE9FMYSWBMNGJSAARCBZCGQSZWUNT9MEZV'
+const web3 = new Web3(new Web3.providers.HttpProvider(keys.HTTP_SERVER));
+web3.eth.net.isListening().then(console.log);
 
 
 server.listen(port, function () {
@@ -51,33 +49,36 @@ aedes.on('connectionError', function (client, err) {
 aedes.on('publish', function (packet, client) {
   if (client) {
 
-    //Catching username and password
-    var usrnme = Object.values(client['parser'])['0']['username']
-    var pass = Object.values(client['parser'])['0']['password']
-
-    console.log('message from client', client.id)
-    console.log('username:',usrnme)
-  //var x = Buffer.compare(buf1, buf2)  
-    console.log('password:',pass)
-
-    var  topic = packet.topic
+    var topic = packet.topic
     var price = getPrice(topic)
     var currency =  getCurrency(topic)
+    var subs = listOfSubs(packet.topic)
 
     //The new topics are added to the topics array
-    if (IsItNew(packet.topic)){
-    topics[i] = topic
-    console.log(`${packet.topic} added`)
-    //topics[i][0]= usrnme
-    //topics[i][1]= pass
-    i++
-    
-    var subs = listOfSubs(packet.topic)
-    var sub = subs[0]
-    }
+    //The known topics we keep counting messages, once we have been delivered maxTrans messages
+    //then we charge to the subscribers
 
-    //Charge from the subscriptors using IOTA
-    //chargeSubs(listOfSubs(packet.topic), client, topic.toString(), price, currency)
+    if (IsItNew(packet.topic)){
+      topics_count[i] = {topic: topic, subscribers:{}}
+  
+    console.log(`${topics_count[i]} added`)
+    i++
+    }else{   
+      var index = topics_count.findIndex(
+        function isEquals(element) {
+          return topic===element['topic']
+        })
+  
+      topics_count[index]['counter'] +=1
+
+      if (topics_count[index]['counter'] == maxTrans){
+        if(!chargeSubs(subs, client, topic.toString(), price*maxTrans, currency)){
+          console.log("There are no subscribers")
+      }
+
+      //incrementCounterAndCharge(topic)
+
+    }
 
     console.log(`The price is: ${price} and the currency is: ${currency}`)
     console.log(`List of subscribers to ${packet.topic} topic`,subs)
@@ -88,21 +89,14 @@ aedes.on('publish', function (packet, client) {
 
 aedes.on('subscribe', function (subscriptions, client) {
   if (client) {
-    //Authorizations
-   aedes.authorizeSubscribe = function (client,sub, credentialsCheck) {
-    var usrnmeSub = Object.values(sub['parser'])['0']['username']
-    var usrnmePub = 'weAreTheChampions'
- 
-    return (credentialsCheck(usrnmeSub,usrnmePub))
-    }
     console.log('Subscriptions of',client.id, subscriptions)
-
+    updateList(client, subscriptions)
+    console.log("Topics count",topics_count)
     }
 })
 
 aedes.on('client', function (client) {
   console.log("New client", client.id)
-  //console.log("client", client)
   clientsId[j] = client.id
   j++
 
@@ -130,8 +124,8 @@ function listOfSubs(topic){
 
 function IsItNew(topic){
   var i=0; var flag = true;
-  while(i<topics.length && flag){
-    if(topic==topics[i]){
+  while(i<topics_count.length && flag){
+    if(topic==topics_count[i]['topic']){
       flag=false;
     }else{
       i++
@@ -158,58 +152,92 @@ return res
 
 function chargeSubs(arrayOfSubs, pub, topic, price, currency){
   var status = false
-  var price_fee = price*(1+brokerFee)
- // var message = Converter.asciiToTrytes(topic);
- //For now we're not using the currency 
-
- //Check balance
- iota
-  .getBalances([pub.id], 100)
-  .then(({ balances }) => {
-    console.log("This is the balance of publisher",balances)
-  })
-  .catch(err => {
-    console.error(err)
-  })
-
-  //Withdraw the payment (Transaction and fee) from the subs
+  var fee = price*(brokerFee)
+  var balanceA;
+  var balanceB;
   
-  const main = async () => {
-  const transfers = [
-    {
-      value: price_fee,
-      address: pub.id,
-      tag: 'MYMAGIC'
-    }
-  ]
-  console.log(`Sending ${price_fee} to ${pub.id}`)
+  //For now we're using ethereum 
 
-  try {
-    // Construct bundle and convert to trytes
-    const trytes = await iota.prepareTransfers(seed, transfers)
-    // Send bundle to node.
-    const response = await iota.sendTrytes(trytes, 3, 9)
+  if(arrayOfSubs.length > 0){
+ 
+  for (var k=0; k<arrayOfSubs.length; k++){
+  //Withdraw the payment (Transaction and fee) from the subs
+  console.log("This is the account of the pub: ",pub.id)
+  const account = web3.eth.accounts.privateKeyToAccount(pub.id);
+  web3.eth.accounts.wallet.add(account);
+  web3.eth.defaultAccount = account.address;
+  bal(account.address).then(function(result){
+  //console.log(web3.utils.fromWei(result , 'ether'));
+  balanceA = web3.utils.fromWei(result , 'ether');
+  });
 
-    console.log('Completed TXs')
-    response.map(tx => console.log(tx))
-  } catch (e) {
-    console.log(e)
-  }
-  }
+  console.log("This is the account of the sub: ",arrayOfSubs[k] )
+  const account2 = web3.eth.accounts.privateKeyToAccount(arrayOfSubs[k]);
+  web3.eth.accounts.wallet.add(account2);
+  bal(account2.address).then(function(result){
+  //console.log(web3.utils.fromWei(result , 'ether'));
+  balanceB = web3.utils.fromWei(result , 'ether');
+  });
 
-  main()
 
-  //Charge the payment to the publisher
-
+web3.eth.sendTransaction({
+  from: account2.address ,
+  to: account.address,
+  value: price,
+  gas: 30000
+}).then(function(res){
+  console.log(res);
+});
+}
   //Charge the fee to the broker  
-
+  //We need an accounnt for the broker in order to send the transfer
+}
   return status
 }
 
-function credentialsCheck(a,b){
-  var res = false
-  if (a===b){
-    res = true
+function bal(address) {
+  let balance = web3.eth.getBalance(address);
+  //console.log(`The balance of ${address} is ${balance}`)
+  return balance;
+}
+
+function updateList(client, subscriptions){
+  if(topics_count.length>=1 && subscriptions.length>=1){
+  for (var k=0; k<topics_count.length; k++){
+      var indexSubs = searchIndex(subscriptions,topics_count[k]['topic'])
+      if (indexSubs > -1){
+      var indexClient = searchIndex(topics_count[k]['subscribers']['id'],client.id)
+      if(indexClient == -1)
+      {
+        topics_count[k]['subscribers'].push({id: client.id, counter:1})
+      }
+      }
+    }
   }
-return res
+}
+
+function incrementCounterAndCharge (topic){
+  var indexTopic = searchIndex(topics_count,topic,'topic')
+  for (var i=0; i<topics_count[indexTopic]['subscribers'].length; i++){
+    topics_count[indexTopic]['subscribers']['counter'][i] +=1
+    console.log("increment counter", topics_count[indexTopic]['subscribers']['counter'][i])
+    if(topics_count[indexTopic]['subscribers']['counter'][i]==maxTrans){
+      chargeSubs(topics_count[indexTopic]['subscribers']['id'], client, topic.toString(), price*maxTrans, currency)
+    }
+  }
+}
+
+function searchIndex(array, valueComp, property){
+  if (property == ''){
+  var index = array.findIndex(
+    function isEquals(element) {
+      return valueComp===element
+    })
+  }else{
+    var index= array.findIndex(
+      function isEquals(element) {
+        return valueComp===element[property]
+      })
+  }
+  return index
 }

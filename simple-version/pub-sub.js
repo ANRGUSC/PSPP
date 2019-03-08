@@ -1,7 +1,7 @@
 const mqtt = require('mqtt');
-var topic = "Topic1%1%anycurrency"; var topic1 = "Hola-1"; var topic2 = "Hola-2"
-var address1 = 'XSNKYZR9AXVYOFYEZCDZLYHVHMWFRAJRRPSNRIURHGSSYRIAWGDQEITFLSQTFXGKPBZJW9UXZNNPPELKC'
-var address2 = 'LMMKZDFYA999ZKEICKWHENCRYEKSNWUCYZZJJCSZKWGYUTLQ9QFKPJCNA9RSHUDVCIPWAZVWDEEYRYYAB'
+var topic = "Topic1%10000000000000000%anycurrency"; var topic1 = "Hola-1"; var topic2 = "Hola-2"
+var address1 = '0xE8B03DE7D420DB4164D02D143548E81CB8D2F898E38E9A0629AD47ED89770AF8'
+var address2 = '0xC89ADA337DCDD9D9D092D582104064554DDC3A835B0D164B82E304F0DFC5F0FC'
 
 var client = mqtt.connect('mqtt://localhost', {
          clientId: address1,
@@ -11,7 +11,7 @@ var client = mqtt.connect('mqtt://localhost', {
      })
 
 //Three messages, one publisher, one topic
-const userMessagePerSecond = 1;
+const userMessagePerSecond = 0.3;
 const userMessageInterval = 1000 / userMessagePerSecond;
 var messageNumber = 1;
 
@@ -30,8 +30,7 @@ client.on('connect', function(){
 var  subs = mqtt.connect('mqtt://localhost', {
          clientId: address2,
          clean: false,
-         username:'weAreTheChampions',
-         password:'yesWeAre'
+         
      })
 
      subs.on('connect', function () {
@@ -45,19 +44,19 @@ var  subs = mqtt.connect('mqtt://localhost', {
 
 var bal = 10;
 var  subs1 = mqtt.connect('mqtt://localhost', {
-        clientId: `subs-2`,
+        clientId: 'hola',
         clean: false
     })
 
     subs1.on('connect', function () {
-       subs1.subscribe(topic);
+       subs1.subscribe(topic1);
        console.log(`user subs-2 subscribed to group topic ${topic}`)
        subs1.subscribe(topic1);
        console.log(`user subs-2 subscribed to group topic ${topic1}`)
     })
 
 var  subs2 = mqtt.connect('mqtt://localhost', {
-        clientId: `subs-3`,
+        clientId: 'address2',
         clean: false
     })
 
@@ -65,27 +64,3 @@ var  subs2 = mqtt.connect('mqtt://localhost', {
        subs2.subscribe(topic1);
        console.log(`user subs-3 subscribed to group topic ${topic1}`)
     })
-
-function getId(){
-    //IOTA 
-const iotaLibrary = require('@iota/core')
-
-const iota = iotaLibrary.composeAPI({
-  provider: 'https://nodes.devnet.thetangle.org:443'
-})
-
-const seed =
-  'HELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORL9E'
-  
-  iota
-  .getNewAddress(seed, { index: 0, total: 1 })
-  .then(address => {
-    console.log('Your address is: ' + address)
-    console.log('Paste this address into https://faucet.devnet.iota.org')
-    return address
-  })
-  .catch(err => {
-    console.log(err)
-  })
-
-}
