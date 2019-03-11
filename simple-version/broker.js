@@ -75,7 +75,7 @@ aedes.on('publish', function (packet, client) {
         if(!chargeSubs(subs, client, topic.toString(), price*maxTrans, currency)){
           console.log("There are no subscribers")
       }
-
+      topics_count[index]['counter'] = 0
       //incrementCounterAndCharge(topic)
 
     }
