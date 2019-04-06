@@ -1,2 +1,2 @@
 # PSPP
-pub sub payment protocol using IOTA
+pub sub payment protocol 
