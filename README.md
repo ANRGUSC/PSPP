@@ -58,6 +58,5 @@ broke_w:k.js contains case for K parameter = 10.
 ## Acknowledgments
 
 * Center for Cyber-Physical Systems and the Internet of Things
-=======
 
 
