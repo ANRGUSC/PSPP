@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # PSPP - Proof of concept
 
 This is the development of the proof of concept of PSPP (PUBLISH-SUBSCRIBER-PRICE-PROTOCOL). PSPP integrates payment to publish-subscriber model. 
@@ -52,13 +52,15 @@ broke_w:k.js contains case for K parameter = 10.
 
 ## Authors
 
-* **Gowri S. Ramachandran, Sharon. L.G. Contreras and Bhaskar Krishnamachari** 
+* Gowri S. Ramachandran gsramach@usc.edu
+* Sharon. L.G. Contreras sladrond@usc.edu
+* Bhaskar Krishnamachari bkrishna@usc.edu 
 
 
 ## Acknowledgments
 
 * Center for Cyber-Physical Systems and the Internet of Things
-=======
-# PSPP
-pub sub payment protocol 
->>>>>>> simple-version
+
+## License
+
+This project is licensed under a permissive license - please see LICENSE.md for details
