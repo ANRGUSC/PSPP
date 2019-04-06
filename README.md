@@ -52,11 +52,15 @@ broke_w:k.js contains case for K parameter = 10.
 
 ## Authors
 
-* **Gowri S. Ramachandran, Sharon. L.G. Contreras and Bhaskar Krishnamachari** 
+* Gowri S. Ramachandran gsramach@usc.edu
+* Sharon. L.G. Contreras sladrond@usc.edu
+* Bhaskar Krishnamachari bkrishna@usc.edu 
 
 
 ## Acknowledgments
 
 * Center for Cyber-Physical Systems and the Internet of Things
 
+## License
 
+This project is licensed under a permissive license - please see LICENSE.md for details
