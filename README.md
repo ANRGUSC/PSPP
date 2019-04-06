@@ -63,4 +63,4 @@ broke_w:k.js contains case for K parameter = 10.
 
 ## License
 
-This project is licensed under a permissive license - please see LICENSE.md for details
+This project is licensed under a permissive license - please see [LICENSE.md] (https://github.com/ANRGUSC/PSPP/blob/master/license.md) for details
