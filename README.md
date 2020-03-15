@@ -1,5 +1,5 @@
 
-# PSPP - Proof of concept
+# PSPP - Proof of concept (Simple version file)
 
 This is the development of the proof of concept of PSPP (PUBLISH-SUBSCRIBER-PRICE-PROTOCOL). PSPP integrates payment to publish-subscriber model. 
 
